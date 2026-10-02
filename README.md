@@ -42,6 +42,10 @@ python -m http.server 8000
 ```
 
 Seus dados ficam salvos apenas no `localStorage` do seu navegador — nada é enviado para a internet.
+Ao reabrir a página, os valores que você preencheu continuam lá.
+
+**Levar os dados para outro navegador/computador:** use os botões **Baixar dados** (gera um
+arquivo `.json` com tudo que você preencheu) e **Carregar dados** (importa esse arquivo de volta).
 
 ---
 

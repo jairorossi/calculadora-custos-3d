@@ -145,8 +145,11 @@
         <h2><i class="dot" style="--c:#2dd4bf"></i>4. Resumo do custo</h2>
         <div class="btns">
           <button type="button" class="btn ghost" id="copyBtn">Copiar resumo</button>
+          <button type="button" class="btn ghost" id="exportBtn" title="Baixa um arquivo .json com tudo que você preencheu">Baixar dados</button>
+          <button type="button" class="btn ghost" id="importBtn" title="Carrega os valores de um arquivo .json salvo antes">Carregar dados</button>
           <button type="button" class="btn danger ghost" id="clearBtn">Limpar tudo</button>
         </div>
+        <input type="file" id="importFile" accept=".json,application/json" hidden>
       </div>
 
       <div class="hero">

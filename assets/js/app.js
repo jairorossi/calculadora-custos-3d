@@ -225,7 +225,7 @@
 
   var timer = null;
 
-  function save() {
+  function buildData() {
     var data = {
       colors: $$('.c-row', list).map(function (row) {
         return {
@@ -241,7 +241,11 @@
     };
     ENERGY_FIELDS.forEach(function (f) { data.energy[f] = $('#' + f).value; });
     EXTRAS_FIELDS.forEach(function (f) { data.extras[f] = $('#' + f).value; });
-    try { localStorage.setItem(KEY, JSON.stringify(data)); } catch (e) { /* modo privado */ }
+    return data;
+  }
+
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(buildData())); } catch (e) { /* modo privado */ }
   }
 
   function scheduleSave() {
@@ -338,6 +342,41 @@
     document.body.removeChild(ta);
   }
 
+  /* ---------------- Exportar / importar arquivo ---------------- */
+
+  function exportData() {
+    var data = buildData();
+    data.meta = { app: 'calculadora-custos-3d', versao: 1, exportadoEm: new Date().toISOString() };
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'calculadora-3d-' + new Date().toISOString().slice(0, 10) + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 1000);
+    toast('Arquivo baixado. Guarde-o para carregar os mesmos dados em outro navegador.');
+  }
+
+  function importData(text) {
+    var data = null;
+    try { data = JSON.parse(text); } catch (e) { toast('Arquivo inválido: não é um JSON válido.'); return; }
+    if (!data || typeof data !== 'object' || !Array.isArray(data.colors)) {
+      toast('Arquivo inválido: formato não reconhecido.');
+      return;
+    }
+    var cores = data.colors.slice(0, 80);
+    list.innerHTML = '';
+    colorSeq = 0;
+    cores.forEach(function (c) { addColor(c || {}); });
+    fillFields(Object.assign({}, DEFAULTS.energy, data.energy), ENERGY_FIELDS);
+    fillFields(Object.assign({}, DEFAULTS.extras, data.extras), EXTRAS_FIELDS);
+    calc();
+    save();
+    toast('Dados carregados: ' + cores.length + ' cor(es) restaurada(s).');
+  }
+
   /* ---------------- Eventos ---------------- */
 
   $('#addColor').addEventListener('click', function () {
@@ -366,6 +405,23 @@
   });
 
   $('#copyBtn').addEventListener('click', copySummary);
+
+  $('#exportBtn').addEventListener('click', exportData);
+
+  $('#importBtn').addEventListener('click', function () {
+    $('#importFile').click();
+  });
+
+  $('#importFile').addEventListener('change', function () {
+    var file = this.files && this.files[0];
+    if (!file) return;
+    var input = this;
+    var reader = new FileReader();
+    reader.onload = function () { importData(String(reader.result)); };
+    reader.onerror = function () { toast('Não foi possível ler o arquivo.'); };
+    reader.readAsText(file);
+    input.value = '';
+  });
 
   $('#clearBtn').addEventListener('click', function () {
     if (!confirm('Apagar todos os dados e voltar aos valores padrão?')) return;
