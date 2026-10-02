@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Calculadora de Custos de Impressão 3D</title>
+  <meta name="description" content="Calcule o custo real da sua impressão 3D: grama por grama de cada cor de filamento, energia elétrica, depreciação da impressora, manutenção e margem de lucro.">
+  <meta name="theme-color" content="#0b0f17">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>%F0%9F%96%A8%EF%B8%8F</text></svg>">
+  <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+
+  <header class="top">
+    <div class="wrap brand">
+      <span class="logo" aria-hidden="true">🖨️</span>
+      <div>
+        <h1>Calculadora de Custos — Impressão 3D</h1>
+        <p>Quanto gastou de filamento em cada cor, quanto custou a energia e qual o preço real da sua peça.</p>
+      </div>
+    </div>
+  </header>
+
+  <main class="wrap grid">
+
+    <!-- 1. FILAMENTO -->
+    <section class="card" id="filamento">
+      <div class="card-head">
+        <h2><i class="dot" style="--c:#22c55e"></i>1. Filamento por cor</h2>
+        <button type="button" class="btn ghost" id="addColor">+ Adicionar cor</button>
+      </div>
+
+      <p class="help">Informe as gramas usadas de cada cor. O preço é do rolo inteiro — a calculadora descobre o valor por quilo automaticamente. Use <b>Desperdício</b> para purga, skirt, suportes e falhas.</p>
+
+      <div class="colors" id="colorList"></div>
+      <p class="empty" id="emptyState" hidden>Nenhuma cor cadastrada. Clique em <b>+ Adicionar cor</b>.</p>
+
+      <div class="totals-inline">
+        <div>
+          <span>Total de filamento</span>
+          <strong id="totalG">0,0 g</strong>
+        </div>
+        <div>
+          <span>Custo do filamento</span>
+          <strong id="totalFil" class="accent">R$ 0,00</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. ENERGIA -->
+    <section class="card" id="energia">
+      <div class="card-head">
+        <h2><i class="dot" style="--c:#fbbf24"></i>2. Energia elétrica</h2>
+      </div>
+
+      <div class="fields">
+        <label class="field">
+          <span>Potência da impressora (W)</span>
+          <input type="text" inputmode="decimal" id="power" value="250" aria-label="Potência da impressora em watts">
+          <small>Ex.: 250 W (hotend + mesa + leitos)</small>
+        </label>
+
+        <label class="field">
+          <span>Outros aparelhos ligados (W)</span>
+          <input type="text" inputmode="decimal" id="otherPower" value="0" aria-label="Potência de outros aparelhos em watts">
+          <small>Ex.: exaustor, luz, ar-condicionado</small>
+        </label>
+
+        <div class="field-row">
+          <label class="field">
+            <span>Horas de impressão</span>
+            <input type="text" inputmode="numeric" id="hours" value="2" aria-label="Horas de impressão">
+          </label>
+          <label class="field">
+            <span>Minutos</span>
+            <input type="text" inputmode="numeric" id="minutes" value="30" aria-label="Minutos de impressão">
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Tarifa de energia (R$ / kWh)</span>
+          <input type="text" inputmode="decimal" id="tariff" value="0,95" aria-label="Tarifa de energia por quilowatt-hora">
+          <small>Veja na sua conta de luz: valor total ÷ kWh consumido</small>
+        </label>
+      </div>
+
+      <div class="result">
+        <div>
+          <span>Consumo</span>
+          <strong id="kwh">0,000 kWh</strong>
+        </div>
+        <div>
+          <span>Custo da energia</span>
+          <strong id="energyCost" class="accent">R$ 0,00</strong>
+        </div>
+        <div>
+          <span>Custo por hora ligada</span>
+          <strong id="energyHour">R$ 0,00 /h</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. EXTRAS -->
+    <section class="card" id="extras">
+      <div class="card-head">
+        <h2><i class="dot" style="--c:#60a5fa"></i>3. Máquina, manutenção e lucro</h2>
+      </div>
+
+      <div class="fields">
+        <div class="field-row">
+          <label class="field">
+            <span>Valor da impressora (R$)</span>
+            <input type="text" inputmode="decimal" id="purchase" value="1500" aria-label="Valor de compra da impressora">
+          </label>
+          <label class="field">
+            <span>Vida útil (horas)</span>
+            <input type="text" inputmode="numeric" id="life" value="4000" aria-label="Vida útil estimada da impressora em horas">
+          </label>
+        </div>
+        <p class="hint-line">Depreciação calculada: <b id="deprHint">R$ 0,38 /h</b></p>
+
+        <label class="field">
+          <span>Manutenção e peças (R$ / hora)</span>
+          <input type="text" inputmode="decimal" id="maint" value="0" aria-label="Custo de manutenção por hora">
+          <small>Bicos, rolamentos, fita, cola, líquido de parede...</small>
+        </label>
+
+        <label class="field">
+          <span>Sua mão de obra (R$ / hora)</span>
+          <input type="text" inputmode="decimal" id="labor" value="0" aria-label="Custo da mão de obra por hora">
+          <small>Tempo de preparação, pós-processamento e atendimento</small>
+        </label>
+
+        <label class="field">
+          <span>Margem de lucro (%)</span>
+          <input type="text" inputmode="decimal" id="margin" value="0" aria-label="Margem de lucro em porcentagem">
+          <small>Deixe 0 se quiser apenas o custo</small>
+        </label>
+      </div>
+    </section>
+
+    <!-- 4. RESUMO -->
+    <section class="card summary" id="resumo">
+      <div class="card-head">
+        <h2><i class="dot" style="--c:#2dd4bf"></i>4. Resumo do custo</h2>
+        <div class="btns">
+          <button type="button" class="btn ghost" id="copyBtn">Copiar resumo</button>
+          <button type="button" class="btn danger ghost" id="clearBtn">Limpar tudo</button>
+        </div>
+      </div>
+
+      <div class="hero">
+        <span>Valor total da impressão</span>
+        <strong id="sumTotal">R$ 0,00</strong>
+        <em id="heroNote">0 g · 0 h 0 min</em>
+      </div>
+
+      <ul class="breakdown" id="colorBreakdown"></ul>
+
+      <dl class="lines">
+        <div><dt>Filamento <span id="sumG">(0 g)</span></dt><dd id="sumFil">R$ 0,00</dd></div>
+        <div><dt>Energia <span id="sumKwh">(0 kWh)</span></dt><dd id="sumEn">R$ 0,00</dd></div>
+        <div><dt>Depreciação da máquina</dt><dd id="sumDep">R$ 0,00</dd></div>
+        <div><dt>Manutenção e peças</dt><dd id="sumMnt">R$ 0,00</dd></div>
+        <div><dt>Mão de obra</dt><dd id="sumLab">R$ 0,00</dd></div>
+        <div class="rule"><dt>Subtotal (custo real)</dt><dd id="sumSub">R$ 0,00</dd></div>
+        <div><dt id="profitLabel">Lucro</dt><dd id="sumProfit">R$ 0,00</dd></div>
+        <div class="total"><dt>Total</dt><dd id="sumTotal2">R$ 0,00</dd></div>
+      </dl>
+
+      <div class="kpis">
+        <div>
+          <span>Custo por grama</span>
+          <strong id="kpiGram">R$ 0,00 /g</strong>
+        </div>
+        <div>
+          <span>Energia por hora</span>
+          <strong id="kpiHour">R$ 0,00 /h</strong>
+        </div>
+        <div>
+          <span>Tempo total</span>
+          <strong id="kpiTime">0 h</strong>
+        </div>
+      </div>
+
+      <p class="toast" id="toast" role="status" aria-live="polite"></p>
+    </section>
+
+  </main>
+
+  <footer class="wrap foot">
+    <p>Feito para imprimir com consciência de custo. Seus dados ficam salvos apenas no seu navegador (localStorage) — nada é enviado para servidores.</p>
+  </footer>
+
+  <script src="assets/js/app.js"></script>
+</body>
+</html>
