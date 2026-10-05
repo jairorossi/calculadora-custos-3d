@@ -12,10 +12,16 @@ Feita para ser publicada direto no **GitHub Pages**.
 
 | Etapa | O que você informa | O que a calculadora retorna |
 |---|---|---|
-| **1. Filamento por cor** | Nome/cor, gramas usadas, preço do rolo, peso do rolo, % de desperdício | **R$/kg automático**, **custo de cada cor**, total de gramas e total do filamento |
-| **2. Energia elétrica** | Potência da impressora (W), outros aparelhos (W), tempo de impressão, tarifa R$/kWh | Consumo em **kWh**, **custo da energia** e **custo por hora ligada** |
+| **1. Filamento por cor** | Nome/cor, gramas usadas, preço do rolo, peso do rolo, % de desperdício, **horas/minutos da impressão** e **quantidade de peças** | **R$/kg automático**, **custo de cada cor**, total de gramas e total do filamento (já multiplicados pela quantidade) |
+| **2. Energia elétrica** | Potência da impressora (W), outros aparelhos (W) e tarifa R$/kWh — o tempo vem da etapa 1 | Consumo em **kWh**, **custo da energia** e **custo por hora ligada** (valores do lote) |
 | **3. Máquina e lucro** | Valor da impressora + vida útil, manutenção/h, mão de obra/h, margem de lucro | **Depreciação por hora**, custos adicionais e lucro |
-| **4. Resumo** | — | **Total da impressão**, detalhamento **cor a cor**, subtotal (custo real), preço final e **custo por grama** |
+| **4. Resumo** | — | **Total da impressão**, detalhamento **cor a cor**, subtotal (custo real), **valor por peça**, preço final e **custo por grama** |
+
+### Quantidade de peças
+
+Calcule a peça única e informe a **quantidade** (ex.: 4): filamento, energia, depreciação,
+manutenção e mão de obra são multiplicados, e o resumo mostra o **valor por peça**.
+Deixe **1** para peça única.
 
 ### Exemplo rápido
 

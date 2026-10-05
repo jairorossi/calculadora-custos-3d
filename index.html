@@ -32,6 +32,24 @@
 
       <p class="help">Informe as gramas usadas de cada cor. O preço é do rolo inteiro — a calculadora descobre o valor por quilo automaticamente. Use <b>Desperdício</b> para purga, skirt, suportes e falhas.</p>
 
+      <div class="job-strip">
+        <label class="field">
+          <span>⏱ Horas de impressão</span>
+          <input type="text" inputmode="numeric" id="hours" value="2" aria-label="Horas de impressão">
+          <small>por peça</small>
+        </label>
+        <label class="field">
+          <span>Minutos</span>
+          <input type="text" inputmode="numeric" id="minutes" value="30" aria-label="Minutos de impressão">
+          <small>0 a 59</small>
+        </label>
+        <label class="field">
+          <span>Quantidade de peças</span>
+          <input type="text" inputmode="numeric" id="qty" value="1" aria-label="Quantidade de peças">
+          <small>Deixe 1 para peça única</small>
+        </label>
+      </div>
+
       <div class="colors" id="colorList"></div>
       <p class="empty" id="emptyState" hidden>Nenhuma cor cadastrada. Clique em <b>+ Adicionar cor</b>.</p>
 
@@ -39,10 +57,12 @@
         <div>
           <span>Total de filamento</span>
           <strong id="totalG">0,0 g</strong>
+          <small class="mini" id="totalGNote"></small>
         </div>
         <div>
           <span>Custo do filamento</span>
           <strong id="totalFil" class="accent">R$ 0,00</strong>
+          <small class="mini" id="totalFilNote"></small>
         </div>
       </div>
     </section>
@@ -66,15 +86,10 @@
           <small>Ex.: exaustor, luz, ar-condicionado</small>
         </label>
 
-        <div class="field-row">
-          <label class="field">
-            <span>Horas de impressão</span>
-            <input type="text" inputmode="numeric" id="hours" value="2" aria-label="Horas de impressão">
-          </label>
-          <label class="field">
-            <span>Minutos</span>
-            <input type="text" inputmode="numeric" id="minutes" value="30" aria-label="Minutos de impressão">
-          </label>
+        <div class="field ro">
+          <span>⏱ Tempo de impressão (etapa 1)</span>
+          <strong id="timeRef">2 h 30 min</strong>
+          <small id="timeRefTotal"></small>
         </div>
 
         <label class="field">
@@ -183,6 +198,10 @@
         <div>
           <span>Tempo total</span>
           <strong id="kpiTime">0 h</strong>
+        </div>
+        <div id="kpiPieceBox" hidden>
+          <span>Valor por peça</span>
+          <strong id="kpiPiece">R$ 0,00</strong>
         </div>
       </div>
 

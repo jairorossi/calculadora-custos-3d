@@ -12,6 +12,7 @@
 
   var ENERGY_FIELDS = ['power', 'otherPower', 'hours', 'minutes', 'tariff'];
   var EXTRAS_FIELDS = ['purchase', 'life', 'maint', 'labor', 'margin'];
+  var JOB_FIELDS = ['qty'];
   var PALETTE = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#14b8a6', '#3b82f6', '#a855f7', '#ec4899', '#111827', '#f5f5f5'];
 
   var DEFAULTS = {
@@ -20,7 +21,8 @@
       { color: '#f5f5f5', name: 'Branco', g: '', price: '89,90', spool: '1000', waste: '' }
     ],
     energy: { power: '250', otherPower: '0', hours: '2', minutes: '30', tariff: '0,95' },
-    extras: { purchase: '1500', life: '4000', maint: '0', labor: '0', margin: '0' }
+    extras: { purchase: '1500', life: '4000', maint: '0', labor: '0', margin: '0' },
+    job: { qty: '1' }
   };
 
   var brl = new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' });
@@ -138,18 +140,27 @@
     var rows = collectRows();
     var totalG = 0, totalFil = 0;
 
+    var qty = Math.floor(parseNum($('#qty') ? $('#qty').value : 1)) || 1;
+    if (qty < 1) qty = 1;
+    if (qty > 9999) qty = 9999;
+    var many = qty > 1;
+
     rows.forEach(function (r) {
       totalG += r.gEff;
       totalFil += r.cost;
-      $('.o-sub', r.el).textContent = money(r.cost);
+      $('.o-sub', r.el).textContent = money(r.cost * qty);
       $('.o-kg', r.el).textContent = r.perKg > 0 ? money(r.perKg) + '/kg' : '';
-      var hint = $('.g-hint', r.el);
-      hint.textContent = (r.waste > 0 && r.g > 0) ? nf(1, 1).format(r.gEff) + ' g já c/ desperdício' : '';
+      var parts = [];
+      if (r.waste > 0 && r.g > 0) parts.push(nf(1, 1).format(r.gEff) + ' g já c/ desperdício');
+      if (many) parts.push(nf(1, 1).format(r.gEff * qty) + ' g no lote (' + qty + 'x)');
+      $('.g-hint', r.el).textContent = parts.join(' · ');
     });
 
     $('#emptyState').hidden = rows.length > 0;
-    $('#totalG').textContent = grams(totalG);
-    $('#totalFil').textContent = money(totalFil);
+    $('#totalG').textContent = grams(totalG * qty);
+    $('#totalFil').textContent = money(totalFil * qty);
+    if ($('#totalGNote')) $('#totalGNote').textContent = many ? nf(1, 1).format(totalG) + ' g por peça' : '';
+    if ($('#totalFilNote')) $('#totalFilNote').textContent = many ? money(totalFil) + ' por peça' : '';
 
     // Energia
     var power = Math.max(0, parseNum($('#power').value));
@@ -163,9 +174,13 @@
     var energyCost = consumption * tariff;
     var energyPerHour = watts / 1000 * tariff;
 
-    $('#kwh').textContent = kwh(consumption);
-    $('#energyCost').textContent = money(energyCost);
+    $('#kwh').textContent = kwh(consumption * qty);
+    $('#energyCost').textContent = money(energyCost * qty);
     $('#energyHour').textContent = money(energyPerHour) + ' /h';
+    if ($('#timeRef')) {
+      $('#timeRef').textContent = timeLabel(t) + (many ? ' por peça' : '');
+      $('#timeRefTotal').textContent = many ? 'Lote de ' + qty + ' peças: ' + timeLabel(t * qty) : '';
+    }
 
     // Extras
     var purchase = Math.max(0, parseNum($('#purchase').value));
@@ -181,42 +196,52 @@
 
     $('#deprHint').textContent = money(deprPerHour) + ' /h';
 
-    // Resumo
-    var subtotal = totalFil + energyCost + deprCost + maintCost + laborCost;
+    // Resumo (valores já multiplicados pela quantidade de peças)
+    var unit = totalFil + energyCost + deprCost + maintCost + laborCost;
+    var subtotal = unit * qty;
     var profit = subtotal * margin / 100;
     var total = subtotal + profit;
-    var perGram = totalG > 0 ? subtotal / totalG : 0;
+    var perGram = totalG > 0 ? unit / totalG : 0;
+    var perPiece = total / qty;
 
     $('#sumTotal').textContent = money(total);
     $('#sumTotal2').textContent = money(total);
-    $('#heroNote').textContent = nf(1, 1).format(totalG) + ' g · ' + timeLabel(t);
-    $('#sumG').textContent = '(' + grams(totalG) + ')';
-    $('#sumFil').textContent = money(totalFil);
-    $('#sumKwh').textContent = '(' + kwh(consumption) + ')';
-    $('#sumEn').textContent = money(energyCost);
-    $('#sumDep').textContent = money(deprCost);
-    $('#sumMnt').textContent = money(maintCost);
-    $('#sumLab').textContent = money(laborCost);
+    $('#heroNote').textContent = nf(1, 1).format(totalG * qty) + ' g · ' + timeLabel(t * qty) +
+      (many ? ' · ' + qty + ' peças' : '');
+    $('#sumG').textContent = '(' + grams(totalG * qty) + ')';
+    $('#sumFil').textContent = money(totalFil * qty);
+    $('#sumKwh').textContent = '(' + kwh(consumption * qty) + ')';
+    $('#sumEn').textContent = money(energyCost * qty);
+    $('#sumDep').textContent = money(deprCost * qty);
+    $('#sumMnt').textContent = money(maintCost * qty);
+    $('#sumLab').textContent = money(laborCost * qty);
     $('#sumSub').textContent = money(subtotal);
     $('#profitLabel').textContent = margin > 0 ? 'Lucro (' + nf(0, 2).format(margin) + '%)' : 'Lucro';
     $('#sumProfit').textContent = money(profit);
     $('#kpiGram').textContent = money(perGram) + ' /g';
     $('#kpiHour').textContent = money(energyPerHour) + ' /h';
-    $('#kpiTime').textContent = timeLabel(t);
+    $('#kpiTime').textContent = timeLabel(t * qty);
+    if ($('#kpiPieceBox')) {
+      $('#kpiPieceBox').hidden = !many;
+      $('#kpiPiece').textContent = money(perPiece);
+      var kpis = $('#kpiPieceBox').parentNode;
+      if (many) kpis.setAttribute('data-n', '4'); else kpis.removeAttribute('data-n');
+    }
 
     // Detalhamento por cor
     var bd = $('#colorBreakdown');
     bd.innerHTML = rows.map(function (r) {
       return '<li><i style="background:' + esc(r.color) + '"></i>' +
         '<b>' + esc(r.name) + '</b>' +
-        '<span class="muted">' + nf(1, 1).format(r.gEff) + ' g</span>' +
-        '<b>' + money(r.cost) + '</b></li>';
+        '<span class="muted">' + nf(1, 1).format(r.gEff * qty) + ' g</span>' +
+        '<b>' + money(r.cost * qty) + '</b></li>';
     }).join('');
 
     last = {
-      rows: rows, totalG: totalG, totalFil: totalFil,
-      t: t, consumption: consumption, energyCost: energyCost, energyPerHour: energyPerHour,
-      deprCost: deprCost, maintCost: maintCost, laborCost: laborCost,
+      rows: rows, qty: qty, totalG: totalG * qty, totalFil: totalFil * qty,
+      t: t, timeTotal: t * qty, consumption: consumption * qty, energyCost: energyCost * qty,
+      energyPerHour: energyPerHour,
+      deprCost: deprCost * qty, maintCost: maintCost * qty, laborCost: laborCost * qty,
       subtotal: subtotal, margin: margin, profit: profit, total: total, perGram: perGram
     };
   }
@@ -237,10 +262,11 @@
           waste: $('.i-waste', row).value
         };
       }),
-      energy: {}, extras: {}
+      energy: {}, extras: {}, job: {}
     };
     ENERGY_FIELDS.forEach(function (f) { data.energy[f] = $('#' + f).value; });
     EXTRAS_FIELDS.forEach(function (f) { data.extras[f] = $('#' + f).value; });
+    JOB_FIELDS.forEach(function (f) { data.job[f] = $('#' + f).value; });
     return data;
   }
 
@@ -265,6 +291,7 @@
     DEFAULTS.colors.forEach(addColor);
     fillFields(DEFAULTS.energy, ENERGY_FIELDS);
     fillFields(DEFAULTS.extras, EXTRAS_FIELDS);
+    fillFields(DEFAULTS.job, JOB_FIELDS);
   }
 
   function load() {
@@ -275,6 +302,7 @@
       data.colors.forEach(addColor);
       fillFields(Object.assign({}, DEFAULTS.energy, data.energy), ENERGY_FIELDS);
       fillFields(Object.assign({}, DEFAULTS.extras, data.extras), EXTRAS_FIELDS);
+      fillFields(Object.assign({}, DEFAULTS.job, data.job), JOB_FIELDS);
     } else {
       resetToDefaults();
     }
@@ -284,19 +312,22 @@
 
   function summaryText() {
     var d = last;
+    var q = d.qty || 1;
     var out = [];
     out.push('IMPRESSÃO 3D — RESUMO DE CUSTOS');
     out.push('--------------------------------');
+    out.push('QUANTIDADE: ' + q + (q > 1 ? ' peças (valores abaixo já multiplicados)' : ' peça'));
+    out.push('');
     out.push('FILOMENTO');
     d.rows.forEach(function (r) {
-      out.push('  - ' + r.name + ': ' + nf(1, 1).format(r.gEff) + ' g = ' + money(r.cost) +
+      out.push('  - ' + r.name + ': ' + nf(1, 1).format(r.gEff * q) + ' g = ' + money(r.cost * q) +
         ' (' + money(r.perKg) + '/kg)');
     });
     if (d.rows.length === 0) out.push('  (nenhuma cor)');
     out.push('  Total: ' + nf(1, 1).format(d.totalG) + ' g = ' + money(d.totalFil));
     out.push('');
     out.push('ENERGIA ELÉTRICA');
-    out.push('  Tempo: ' + timeLabel(d.t));
+    out.push('  Tempo: ' + timeLabel(d.timeTotal) + (q > 1 ? ' (' + timeLabel(d.t) + ' por peça)' : ''));
     out.push('  Consumo: ' + kwh(d.consumption));
     out.push('  Custo: ' + money(d.energyCost) + '  (' + money(d.energyPerHour) + '/h)');
     out.push('');
@@ -309,6 +340,7 @@
       out.push('LUCRO (' + nf(0, 2).format(d.margin) + '%):     ' + money(d.profit));
     }
     out.push('TOTAL:                  ' + money(d.total));
+    if (q > 1) out.push('VALOR POR PEÇA:         ' + money(d.total / q));
     out.push('Custo por grama:        ' + money(d.perGram) + '/g');
     return out.join('\n');
   }
@@ -372,6 +404,7 @@
     cores.forEach(function (c) { addColor(c || {}); });
     fillFields(Object.assign({}, DEFAULTS.energy, data.energy), ENERGY_FIELDS);
     fillFields(Object.assign({}, DEFAULTS.extras, data.extras), EXTRAS_FIELDS);
+    fillFields(Object.assign({}, DEFAULTS.job, data.job), JOB_FIELDS);
     calc();
     save();
     toast('Dados carregados: ' + cores.length + ' cor(es) restaurada(s).');
